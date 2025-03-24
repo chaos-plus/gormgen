@@ -6,6 +6,6 @@
 
 ```golang
 
-//go:generate go run main.go --dbsrc "sqlite://migration_dlock.db" --tables chaosplus_distributed_locks --tablePrefix chaosplus
+//go:generate gormgen --dbsrc "sqlite://migration_dlock.db" --tables chaosplus_distributed_locks --tablePrefix chaosplus
 
 ```
