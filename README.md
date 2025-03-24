@@ -5,6 +5,11 @@
 
 
 ```golang
+package dlock
+
+import (
+	_ "gorm.io/gen"
+)
 
 //go:generate gormgen --dbsrc "sqlite://migration_dlock.db" --tables chaosplus_distributed_locks --tablePrefix chaosplus
 
