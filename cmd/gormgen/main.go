@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
+	"os"
 	"strings"
 
 	generate "github.com/chaos-plus/gormgen/gen"
 	"github.com/robotism/flagger"
+	"github.com/spf13/cobra"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -28,38 +29,57 @@ type DaoOptions struct {
 	Clear       bool   `mapstructure:"clear" description:"clear output directory" default:"true"`
 }
 
-func main() {
-	f := flagger.New()
-	c := &DaoOptions{}
+var (
+	f = flagger.New()
+	c = &DaoOptions{}
+)
 
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
+	Use:   "example",
+	Short: "a flagger example",
+	Long:  `a flagger example`,
+	Run: func(cmd *cobra.Command, args []string) {
+
+		url := strings.Split(c.DbSource, "://")
+		if len(url) != 2 {
+			panic("invalid db source, should be like xxxx://xxxx")
+		}
+		scheme := url[0]
+		path := url[1]
+
+		var db *gorm.DB
+		var err error
+		switch scheme {
+		case "mysql":
+			db, err = gorm.Open(mysql.Open(path))
+		case "pgsql", "postgre", "postgresql":
+			db, err = gorm.Open(postgres.Open(path))
+		case "sqlite":
+			db, err = gorm.Open(sqlite.Open(path))
+		case "sqlte3":
+			db, err = gorm.Open(sqlite3.Open(path))
+		default:
+			panic("unsupported db source: " + c.DbSource)
+		}
+		if err != nil {
+			panic(err)
+		}
+		generate.Generate(db, strings.Split(c.Tables, ","), strings.Split(c.TablesEx, ","), c.TablePrefix, c.QueryDir, c.ModelDir, c.Clear)
+		generate.SetTestUsePureSqlite(c.QueryDir, c.ModelDir)
+		generate.AddGitIgnore(c.QueryDir, c.ModelDir, "*_test.db")
+	},
+}
+
+func init() {
+	f.UseFlags(rootCmd.Flags())
+	f.UseConfigFileArgDefault()
 	f.Parse(c)
-	fmt.Printf("config: %+v\n", c)
+}
 
-	url := strings.Split(c.DbSource, "://")
-	if len(url) != 2 {
-		panic("invalid db source, should be like xxxx://xxxx")
-	}
-	scheme := url[0]
-	path := url[1]
-
-	var db *gorm.DB
-	var err error
-	switch scheme {
-	case "mysql":
-		db, err = gorm.Open(mysql.Open(path))
-	case "pgsql", "postgre", "postgresql":
-		db, err = gorm.Open(postgres.Open(path))
-	case "sqlite":
-		db, err = gorm.Open(sqlite.Open(path))
-	case "sqlte3":
-		db, err = gorm.Open(sqlite3.Open(path))
-	default:
-		panic("unsupported db source: " + c.DbSource)
-	}
+func main() {
+	err := rootCmd.Execute()
 	if err != nil {
-		panic(err)
+		os.Exit(1)
 	}
-	generate.Generate(db, strings.Split(c.Tables, ","), strings.Split(c.TablesEx, ","), c.TablePrefix, c.QueryDir, c.ModelDir, c.Clear)
-	generate.SetTestUsePureSqlite(c.QueryDir, c.ModelDir)
-	generate.AddGitIgnore(c.QueryDir, c.ModelDir, "*_test.db")
 }
