@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	generate "github.com/chaos-plus/chaos-plus-gormgen/gen"
+	generate "github.com/chaos-plus/gormgen/gen"
 	"github.com/robotism/flagger"
 
 	"gorm.io/driver/mysql"

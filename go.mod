@@ -1,4 +1,4 @@
-module github.com/chaos-plus/chaos-plus-gormgen
+module github.com/chaos-plus/gormgen
 
 go 1.23.4
 
